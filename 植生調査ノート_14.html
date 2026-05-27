@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>植生調査 フィールドノート</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --green-dark: #1a3a1a;
+  --green-mid: #2d6a2d;
+  --green-light: #4a9e4a;
+  --green-pale: #e8f5e8;
+  --green-accent: #6fcf6f;
+  --earth: #8b6914;
+  --cream: #faf8f0;
+  --ink: #1a1a1a;
+  --muted: #6b7280;
+  --border: #d1e8d1;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* カタカナ入力モード */
+input[type="text"] {
+  ime-mode: active;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--green-dark);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--green-accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.header h1 {
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.header-meta {
+  font-family: 'Space Mono', monospace;
+  color: var(--green-accent);
+  font-size: 11px;
+}
+
+/* Tab navigation */
+.tabs {
+  display: flex;
+  background: var(--green-dark);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  overflow-x: auto;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  color: rgba(255,255,255,0.55);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.tab.active {
+  color: var(--green-accent);
+  border-bottom-color: var(--green-accent);
+  background: rgba(111,207,111,0.08);
+}
+
+/* Pages */
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+
+/* Info bar */
+.info-bar {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.info-field label {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.info-field input {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--cream);
+  color: var(--ink);
+  transition: border-color 0.2s;
+}
+
+.info-field input:focus {
+  outline: none;
+  border-color: var(--green-light);
+  background: white;
+}
+
+/* Section header */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.section-badge {
+  background: var(--green-mid);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.06em;
+}
+
+.section-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-dark);
+}
+
+/* Coverage legend */
+.coverage-legend {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.coverage-legend h3 {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.coverage-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.coverage-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.chip-visual {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+
+.chip-visual.selected {
+  border-color: var(--green-mid);
+  background: var(--green-pale);
+  color: var(--green-dark);
+  transform: scale(1.05);
+}
+
+.chip-plus .chip-visual { background: white; color: var(--ink); }
+.chip-1 .chip-visual { background: #e8f3e8; }
+.chip-2 .chip-visual { background: #c8e0c8; }
+.chip-3 .chip-visual { background: #90be90; }
+.chip-4 .chip-visual { background: #5a9e5a; color: white; }
+.chip-5 .chip-visual { background: #2d6a2d; color: white; }
+
+.chip-label {
+  font-size: 9px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 40px;
+}
+
+/* Plant rows */
+.plant-table {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.plant-table-header {
+  background: var(--green-dark);
+  color: white;
+  display: grid;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.mokushi-header { grid-template-columns: 30px 1fr 100px; gap: 8px; }
+.point-header { grid-template-columns: 50px 1fr 1fr 1fr; gap: 6px; }
+
+.plant-row {
+  display: grid;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.plant-row:last-child { border-bottom: none; }
+.plant-row:hover { background: var(--green-pale); }
+
+.mokushi-row { grid-template-columns: 30px 1fr 100px; }
+.point-row { grid-template-columns: 50px 1fr 1fr 1fr; gap: 6px; }
+
+.row-no {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.row-input {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+  transition: border-color 0.2s;
+  background: var(--cream);
+}
+
+.row-input:focus {
+  outline: none;
+  border-color: var(--green-light);
+  background: white;
+}
+
+.coverage-select {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+  background: var(--cream);
+  cursor: pointer;
+  appearance: none;
+  text-align: center;
+}
+
+.coverage-select:focus {
+  outline: none;
+  border-color: var(--green-light);
+}
+
+/* Add row button */
+.add-row-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed var(--green-light);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--green-mid);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.add-row-btn:hover {
+  background: var(--green-pale);
+  border-color: var(--green-mid);
+}
+
+.kodrat-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.kodrat-grid.two-col {
+  grid-template-columns: 1fr 1fr;
+}
+
+.kodrat-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.kodrat-card-header {
+  background: var(--green-mid);
+  color: white;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kodrat-no {
+  background: white;
+  color: var(--green-dark);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.kodrat-body { padding: 10px; }
+
+.kodrat-row {
+  display: grid;
+  grid-template-columns: 1fr 70px;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.kodrat-row:last-child { margin-bottom: 0; }
+
+/* Export button */
+.export-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: var(--green-dark);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.export-btn:hover { background: var(--green-mid); }
+
+/* Coverage value display */
+.coverage-val {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.cov-plus { background: #f0f0f0; color: #555; }
+.cov-1 { background: #e8f3e8; color: #2d6a2d; }
+.cov-2 { background: #c8e0c8; color: #2d6a2d; }
+.cov-3 { background: #90be90; color: #1a3a1a; }
+.cov-4 { background: #5a9e5a; color: white; }
+.cov-5 { background: #2d6a2d; color: white; }
+
+/* Stats summary */
+.stats-bar {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--green-dark);
+  font-family: 'Space Mono', monospace;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.stat-divider {
+  width: 1px;
+  background: var(--border);
+}
+
+/* Method description */
+.method-desc {
+  background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  position: relative;
+  overflow: hidden;
+}
+
+.method-desc::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 80px;
+  height: 80px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+
+.method-desc-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.method-desc strong { color: var(--green-accent); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--green-dark);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 0.3s;
+  z-index: 999;
+  white-space: nowrap;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Print styles */
+@media print {
+  .tabs, .add-row-btn, .export-btn, .toast { display: none !important; }
+  .page { display: block !important; }
+  body { background: white; }
+}
+
+/* Species picker modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-sheet {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+.modal-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 8px;
+}
+
+.modal-search {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--cream);
+}
+.modal-search:focus { outline: none; border-color: var(--green-light); }
+
+.modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 10px 12px;
+}
+
+.species-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.species-chip {
+  background: var(--green-pale);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-dark);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.species-chip:active, .species-chip.selected {
+  background: var(--green-mid);
+  color: white;
+  border-color: var(--green-mid);
+}
+
+.modal-manual {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.modal-manual input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--cream);
+}
+.modal-manual input:focus { outline: none; border-color: var(--green-light); }
+.modal-manual-btn {
+  background: var(--green-mid);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.modal-close {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 10px 12px 16px;
+  padding: 12px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.point-species-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-pale);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 3px;
+}
+
+.point-species-remove {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.point-card-empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 8px 4px;
+  font-style: italic;
+}
+
+.point-add-species-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: white;
+  border: 1.5px dashed var(--green-light);
+  border-radius: 20px;
+  color: var(--green-mid);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.inline-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+
+.inline-chip {
+  padding: 6px 13px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+}
+
+.inline-chip.off {
+  background: var(--cream);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.inline-chip.off:active {
+  background: var(--green-pale);
+  border-color: var(--green-light);
+}
+
+.inline-chip.on {
+  background: var(--green-mid);
+  border-color: var(--green-mid);
+  color: white;
+}
+
+.point-inline-card {
+  grid-column: span 2;
+}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-title">
+      <div class="header-icon">🌿</div>
+      <h1>植生調査 フィールドノート</h1>
+    </div>
+    <div class="header-meta">v1.0</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('mokushi')">👁 目視法</div>
+    <div class="tab" onclick="switchTab('point')">📍 ポイント法</div>
+    <div class="tab" onclick="switchTab('kodrat')">⬜ コドラート法</div>
+    <div class="tab" onclick="switchTab('names')">✏️ 種名編集</div>
+    <div class="tab" onclick="switchTab('analysis')">📊 データ解析</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ========== 目視法 ========== -->
+<div class="page active" id="page-mokushi">
+  <div class="method-desc">
+    <div class="method-desc-icon">👁</div>
+    ライン上を歩きながら<strong>左右1mの範囲（25×2m）</strong>に存在する植物種をすべてリストアップし、種ごとに<strong>被度</strong>を目視で推定する。
+  </div>
+
+  <div class="info-bar">
+    <div class="info-field">
+      <label>班名</label>
+      <input type="text" id="m-han" placeholder="例: 2班A" oninput="autoSave()">
+    </div>
+    <div class="info-field">
+      <label>記録者</label>
+      <input type="text" id="m-recorder" placeholder="氏名" oninput="autoSave()">
+    </div>
+  </div>
+
+  <div class="stats-bar" id="m-stats">
+    <div class="stat-item">
+      <div class="stat-value" id="m-count">0</div>
+      <div class="stat-label">記録種数</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="m-filled">0</div>
+      <div class="stat-label">被度記録済</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-badge">表3</span>
+    <h2>目視法（フィールドノート）</h2>
+  </div>
+
+  <div class="coverage-legend">
+    <h3>被度の基準</h3>
+    <div class="coverage-chips">
+      <div class="coverage-chip chip-plus"><div class="chip-visual">＋</div><div class="chip-label">5%以下</div></div>
+      <div class="coverage-chip chip-1"><div class="chip-visual">1</div><div class="chip-label">5〜10%</div></div>
+      <div class="coverage-chip chip-2"><div class="chip-visual">2</div><div class="chip-label">10〜25%</div></div>
+      <div class="coverage-chip chip-3"><div class="chip-visual">3</div><div class="chip-label">25〜50%</div></div>
+      <div class="coverage-chip chip-4"><div class="chip-visual">4</div><div class="chip-label">50〜75%</div></div>
+      <div class="coverage-chip chip-5"><div class="chip-visual">5</div><div class="chip-label">75%以上</div></div>
+    </div>
+  </div>
+
+  <div class="plant-table">
+    <div class="plant-table-header mokushi-header">
+      <span>No</span><span>種名</span><span style="text-align:center">被度</span>
+    </div>
+    <div id="m-rows"></div>
+  </div>
+
+  <button class="add-row-btn" onclick="addMokushiRow()">＋ 種を追加</button>
+
+  <button class="export-btn" onclick="exportData('mokushi')">📋 データをコピー</button>
+</div>
+
+<!-- ========== ポイント法 ========== -->
+<div class="page" id="page-point">
+  <div class="method-desc">
+    <div class="method-desc-icon">📍</div>
+    ライン上を歩きながら<strong>1mごと</strong>に20×20cmの小区画を作り、区画に含まれる植物の種名を記録する。植物体の一部でも区画に含まれれば記録対象。
+  </div>
+
+  <div class="info-bar">
+    <div class="info-field">
+      <label>班名</label>
+      <input type="text" id="p-han" placeholder="例: 2班A" oninput="autoSave()">
+    </div>
+    <div class="info-field">
+      <label>記録者</label>
+      <input type="text" id="p-recorder" placeholder="氏名" oninput="autoSave()">
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-value" id="p-point-count">3</div>
+      <div class="stat-label">ポイント数</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="p-species-count">0</div>
+      <div class="stat-label">記録種数</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-badge">表4</span>
+    <h2>ポイント法（フィールドノート）</h2>
+  </div>
+
+  <div class="kodrat-grid" id="p-cards"></div>
+
+  <button class="add-row-btn" onclick="addPointCard()">＋ ポイントを追加</button>
+
+  <button class="export-btn" onclick="exportData('point')">📋 データをコピー</button>
+</div>
+
+<!-- ========== コドラート法 ========== -->
+<div class="page" id="page-kodrat">
+  <div class="method-desc">
+    <div class="method-desc-icon">⬜</div>
+    ライン上を歩きながら<strong>5mごと</strong>にポールを立て、<strong>2×2m四方のコドラート</strong>を作る。含まれるすべての植物の種名を記録し、種ごとに被度を目視推定する。
+  </div>
+
+  <div class="info-bar">
+    <div class="info-field">
+      <label>班名</label>
+      <input type="text" id="k-han" placeholder="例: 2班A" oninput="autoSave()">
+    </div>
+    <div class="info-field">
+      <label>記録者</label>
+      <input type="text" id="k-recorder" placeholder="氏名" oninput="autoSave()">
+    </div>
+  </div>
+
+  <div class="coverage-legend">
+    <h3>被度の基準</h3>
+    <div class="coverage-chips">
+      <div class="coverage-chip chip-plus"><div class="chip-visual">＋</div><div class="chip-label">5%以下</div></div>
+      <div class="coverage-chip chip-1"><div class="chip-visual">1</div><div class="chip-label">5〜10%</div></div>
+      <div class="coverage-chip chip-2"><div class="chip-visual">2</div><div class="chip-label">10〜25%</div></div>
+      <div class="coverage-chip chip-3"><div class="chip-visual">3</div><div class="chip-label">25〜50%</div></div>
+      <div class="coverage-chip chip-4"><div class="chip-visual">4</div><div class="chip-label">50〜75%</div></div>
+      <div class="coverage-chip chip-5"><div class="chip-visual">5</div><div class="chip-label">75%以上</div></div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-badge">表5</span>
+    <h2>コドラート法（フィールドノート）</h2>
+  </div>
+
+  <div class="kodrat-grid two-col" id="k-grid"></div>
+
+  <button class="add-row-btn" onclick="addKodratCard()">＋ コドラートを追加</button>
+
+  <button class="export-btn" onclick="exportData('kodrat')">📋 データをコピー</button>
+</div>
+
+<!-- ========== 種名編集 ========== -->
+<div class="page" id="page-names">
+  <div class="method-desc">
+    <div class="method-desc-icon">✏️</div>
+    ここで種名を変更すると、<strong>目視法・ポイント法・コドラート法すべて</strong>に一括で反映されます。
+  </div>
+  <div id="names-list"></div>
+</div>
+
+<!-- ========== データ解析 ========== -->
+<div class="page" id="page-analysis">
+  <div class="method-desc">
+    <div class="method-desc-icon">📊</div>
+    フィールドデータから<strong>被度の推定値（表6）</strong>を自動計算します。ポイント法は25ポイント中の出現割合、目視法は6段階を%に変換、コドラート法は複数コドラートの平均値。
+  </div>
+
+  <!-- 表7 変換表 -->
+  <div class="coverage-legend" style="margin-bottom:16px;">
+    <h3>表7. 被度の割合(%)への変換</h3>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:8px;">
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">被度＋</div>
+        <div style="background:#f0f0f0;border-radius:6px;padding:4px;font-size:12px;font-weight:700;margin-top:3px;">1%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">被度1</div>
+        <div style="background:#e8f3e8;border-radius:6px;padding:4px;font-size:12px;font-weight:700;margin-top:3px;">7.5%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">被度2</div>
+        <div style="background:#c8e0c8;border-radius:6px;padding:4px;font-size:12px;font-weight:700;margin-top:3px;">17.5%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">被度3</div>
+        <div style="background:#90be90;border-radius:6px;padding:4px;font-size:12px;font-weight:700;margin-top:3px;">37.5%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">被度4</div>
+        <div style="background:#5a9e5a;border-radius:6px;padding:4px;font-size:12px;font-weight:700;color:white;margin-top:3px;">62.5%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">被度5</div>
+        <div style="background:#2d6a2d;border-radius:6px;padding:4px;font-size:12px;font-weight:700;color:white;margin-top:3px;">87.5%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-badge">表6</span>
+    <h2>被度の推定値の比較</h2>
+  </div>
+
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">※ポイント法は全 <input type="number" id="total-points" value="25" min="1" style="width:44px;border:1.5px solid var(--border);border-radius:6px;padding:2px 4px;font-size:11px;text-align:center;" oninput="renderAnalysis()"> ポイント中の出現数で計算</div>
+
+  <div style="overflow-x:auto;">
+    <table id="analysis-table" style="width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);font-size:12px;">
+      <thead>
+        <tr style="background:var(--green-dark);color:white;">
+          <th style="padding:8px 10px;text-align:left;font-weight:700;white-space:nowrap;">No</th>
+          <th style="padding:8px 10px;text-align:left;font-weight:700;white-space:nowrap;">種名</th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap;">ポイント法<br><span style="font-weight:400;font-size:10px;">被度(%)</span></th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap;">目視法<br><span style="font-weight:400;font-size:10px;">被度(6段階)</span></th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap;">目視法<br><span style="font-weight:400;font-size:10px;">被度(%)</span></th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap;">コドラート法<br><span style="font-weight:400;font-size:10px;">平均被度(%)</span></th>
+        </tr>
+      </thead>
+      <tbody id="analysis-body"></tbody>
+    </table>
+  </div>
+
+  <button class="export-btn" onclick="exportAnalysis()" style="margin-top:16px;">📋 解析データをコピー</button>
+  <button class="export-btn" onclick="exportToExcel()" style="margin-top:10px;background:var(--earth);">📥 Excelファイルをダウンロード</button>
+
+  <!-- 表8 種数−面積曲線 -->
+  <div class="section-header" style="margin-top:24px;">
+    <span class="section-badge">表8</span>
+    <h2>種数−面積曲線（ポイント）</h2>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">各ポイントの区画サイズ: <strong>0.04 m²</strong>（20cm × 20cm）</div>
+  <div style="overflow-x:auto;margin-bottom:16px;">
+    <table style="width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);font-size:12px;">
+      <thead>
+        <tr style="background:var(--green-dark);color:white;">
+          <th style="padding:8px 10px;text-align:center;font-weight:700;">ポイントNo.</th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;">出現した種数</th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;">新たに出現した種数</th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;">累積面積(m²)</th>
+          <th style="padding:8px 10px;text-align:center;font-weight:700;">累積種数</th>
+        </tr>
+      </thead>
+      <tbody id="table8-body"></tbody>
+    </table>
+  </div>
+
+  <!-- 種数−面積曲線グラフ -->
+  <div class="section-header">
+    <span class="section-badge">グラフ</span>
+    <h2>種数−面積曲線</h2>
+  </div>
+  <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:24px;">
+    <canvas id="species-area-chart" style="width:100%;"></canvas>
+  </div>
+
+  <!-- 散布図① ポイント法 vs 目視法 -->
+  <div class="section-header">
+    <span class="section-badge">散布図①</span>
+    <h2>ポイント法 vs 目視法</h2>
+  </div>
+  <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;">
+    <canvas id="scatter-mokushi" style="width:100%;"></canvas>
+  </div>
+  <div id="r-mokushi" style="text-align:center;font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:24px;"></div>
+
+  <!-- 散布図② ポイント法 vs コドラート法 -->
+  <div class="section-header">
+    <span class="section-badge">散布図②</span>
+    <h2>ポイント法 vs コドラート法</h2>
+  </div>
+  <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;">
+    <canvas id="scatter-kodrat" style="width:100%;"></canvas>
+  </div>
+  <div id="r-kodrat" style="text-align:center;font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:24px;"></div>
+</div>
+
+<!-- ========== Species Picker Modal ========== -->
+<div class="modal-overlay" id="speciesModal" onclick="handleModalOverlayClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3>🌿 種名を選ぶ</h3>
+      <input class="modal-search" type="text" id="modalSearch" placeholder="種名を検索..." oninput="renderModalChips()">
+    </div>
+    <div class="modal-body">
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">登録済みの種</div>
+      <div class="species-chip-list" id="modalChips"></div>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:12px 0 8px;">手動で入力</div>
+      <div class="modal-manual">
+        <input type="text" id="modalManualInput" placeholder="種名を直接入力" lang="ja" autocomplete="off">
+        <button class="modal-manual-btn" onclick="confirmManualInput()">追加</button>
+      </div>
+    </div>
+    <button class="modal-close" onclick="closeModal()">閉じる</button>
+  </div>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────
+let state = {
+  mokushi: { rows: [{name:'',cov:''}] },
+  point:   { cards: [{ species: [] }, { species: [] }, { species: [] }] },
+  kodrat:  { cards: [{ rows: [{name:'',cov:''}] }] }
+};
+
+const COV_OPTIONS = ['','＋','1','2','3','4','5'];
+const COV_LABELS  = {'＋':'5%以下','1':'5〜10%','2':'10〜25%','3':'25〜50%','4':'50〜75%','5':'75%以上'};
+const COV_CLASS   = {'＋':'cov-plus','1':'cov-1','2':'cov-2','3':'cov-3','4':'cov-4','5':'cov-5'};
+
+// ─── Tab switch ──────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['mokushi','point','kodrat','names','analysis'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'names') renderNamesList();
+  if (name === 'analysis') renderAnalysis();
+}
+
+// ─── Render helpers ──────────────────────────────────────
+function covSelect(val, onchange) {
+  let s = `<select class="coverage-select row-input" onchange="${onchange}" style="font-weight:700;">`;
+  COV_OPTIONS.forEach(o => {
+    s += `<option value="${o}" ${val===o?'selected':''}>${o===''?'--':o+' ('+COV_LABELS[o]+')'}</option>`;
+  });
+  s += '</select>';
+  return s;
+}
+
+// ─── Mokushi ─────────────────────────────────────────────
+function renderMokushi() {
+  const rows = state.mokushi.rows;
+  const container = document.getElementById('m-rows');
+  container.innerHTML = rows.map((r, i) => `
+    <div class="plant-row mokushi-row">
+      <div class="row-no">${i+1}</div>
+      <input class="row-input" type="text" value="${r.name}" placeholder="種名" lang="ja" autocomplete="off"
+        oninput="state.mokushi.rows[${i}].name=this.value; updateMokushiStats(); autoSave()"
+        onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();enterMokushi(${i})}">
+      ${covSelect(r.cov, `state.mokushi.rows[${i}].cov=this.value; updateMokushiStats(); autoSave()`)}
+    </div>
+  `).join('');
+  updateMokushiStats();
+}
+
+function updateMokushiStats() {
+  const rows = state.mokushi.rows;
+  const filled = rows.filter(r => r.name.trim()).length;
+  const withCov = rows.filter(r => r.name.trim() && r.cov).length;
+  document.getElementById('m-count').textContent = filled;
+  document.getElementById('m-filled').textContent = withCov;
+}
+
+function addMokushiRow() {
+  state.mokushi.rows.push({name:'',cov:''});
+  renderMokushi();
+}
+
+function enterMokushi(i) {
+  // 最後の行ならそのまま新行追加、途中ならひとつ下にフォーカス
+  if (i === state.mokushi.rows.length - 1) {
+    state.mokushi.rows.push({name:'',cov:''});
+    renderMokushi();
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('#m-rows .mokushi-row input[type=text]');
+      if (inputs[i+1]) inputs[i+1].focus();
+    }, 30);
+  } else {
+    const inputs = document.querySelectorAll('#m-rows .mokushi-row input[type=text]');
+    if (inputs[i+1]) inputs[i+1].focus();
+  }
+}
+
+// ─── Point ───────────────────────────────────────────────
+let modalTarget = null; // {ci, si} or {ci, new}
+
+function getRegisteredSpecies() {
+  const names = [];
+  state.mokushi.rows.forEach(r => { if(r.name.trim()) names.push(r.name.trim()); });
+  state.point.cards.forEach(card => { card.species.forEach(s => { if(s&&s.trim()) names.push(s.trim()); }); });
+  state.kodrat.cards.forEach(card => { card.rows.forEach(r => { if(r.name&&r.name.trim()) names.push(r.name.trim()); }); });
+  return [...new Set(names)];
+}
+
+function renderPoint() {
+  const cards = state.point.cards;
+  const grid = document.getElementById('p-cards');
+  const allSpecies = getRegisteredSpecies();
+
+  grid.innerHTML = cards.map((card, ci) => {
+    const selected = new Set(card.species.filter(Boolean));
+
+    const chips = allSpecies.map(s => {
+      const isOn = selected.has(s);
+      return `<button class="inline-chip ${isOn ? 'on' : 'off'}" onclick="togglePointSpecies(${ci},'${s.replace(/'/g,"\\'")}')">${s}</button>`;
+    }).join('');
+
+    const tags = card.species.filter(Boolean).map((s, si) =>
+      `<span class="point-species-tag">
+        ${s}
+        <button class="point-species-remove" onclick="removePointSpeciesByName(${ci},'${s.replace(/'/g,"\\'")}')">×</button>
+      </span>`
+    ).join('');
+
+    return `
+    <div class="kodrat-card point-inline-card">
+      <div class="kodrat-card-header">
+        <div class="kodrat-no">${ci+1}</div>
+        ポイント No.${ci+1}
+        <span style="margin-left:auto;font-size:11px;opacity:.7;">${selected.size}種</span>
+      </div>
+      <div class="kodrat-body">
+        ${allSpecies.length > 0 ? `
+          <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:7px;">タップして記録</div>
+          <div class="inline-chip-list">${chips}</div>
+        ` : `<div class="point-card-empty" style="margin-bottom:8px;">目視法に種を登録すると選べます</div>`}
+        ${tags ? `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">${tags}</div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <input class="row-input" id="p-manual-${ci}" type="text" placeholder="他の種名を直接入力…" lang="ja" autocomplete="off" style="flex:1;font-size:13px;padding:6px 10px;"
+            onkeydown="if(event.key==='Enter')addPointManual(${ci})">
+          <button onclick="addPointManual(${ci})" style="background:var(--green-mid);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">追加</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updatePointStats();
+}
+
+function togglePointSpecies(ci, name) {
+  const species = state.point.cards[ci].species;
+  const idx = species.indexOf(name);
+  if (idx >= 0) {
+    species.splice(idx, 1);
+  } else {
+    species.push(name);
+  }
+  renderPoint();
+  autoSave();
+}
+
+function removePointSpeciesByName(ci, name) {
+  const species = state.point.cards[ci].species;
+  const idx = species.indexOf(name);
+  if (idx >= 0) species.splice(idx, 1);
+  renderPoint();
+  autoSave();
+}
+
+function addPointManual(ci) {
+  const input = document.getElementById(`p-manual-${ci}`);
+  const val = input.value.trim();
+  if (!val) return;
+  if (!state.point.cards[ci].species.includes(val)) {
+    state.point.cards[ci].species.push(val);
+  }
+  renderPoint();
+  autoSave();
+  // フォーカスを手動入力欄に戻す
+  setTimeout(() => {
+    const el = document.getElementById(`p-manual-${ci}`);
+    if (el) el.focus();
+  }, 30);
+}
+
+function updatePointStats() {
+  const cards = state.point.cards;
+  document.getElementById('p-point-count').textContent = cards.length;
+  const sp = new Set();
+  cards.forEach(card => card.species.forEach(s => { if(s && s.trim()) sp.add(s.trim()); }));
+  document.getElementById('p-species-count').textContent = sp.size;
+}
+
+function addPointCard() {
+  state.point.cards.push({ species: [] });
+  renderPoint();
+  autoSave();
+}
+
+function removePointSpecies(ci, si) {
+  state.point.cards[ci].species.splice(si, 1);
+  renderPoint();
+  autoSave();
+}
+
+// ─── Modal (kept for edit use) ───────────────────────────
+function openModalNew(ci) {
+  modalTarget = { ci, mode: 'new' };
+  document.getElementById('modalSearch').value = '';
+  document.getElementById('modalManualInput').value = '';
+  renderModalChips();
+  document.getElementById('speciesModal').classList.add('open');
+}
+
+function openModalEdit(ci, si) {
+  modalTarget = { ci, si, mode: 'edit' };
+  document.getElementById('modalSearch').value = '';
+  document.getElementById('modalManualInput').value = state.point.cards[ci].species[si] || '';
+  renderModalChips();
+  document.getElementById('speciesModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('speciesModal').classList.remove('open');
+  modalTarget = null;
+}
+
+function handleModalOverlayClick(e) {
+  if (e.target === document.getElementById('speciesModal')) closeModal();
+}
+
+function renderModalChips() {
+  const query = document.getElementById('modalSearch').value.trim().toLowerCase();
+  const all = getRegisteredSpecies();
+  const filtered = query ? all.filter(s => s.toLowerCase().includes(query)) : all;
+  const selected = modalTarget && modalTarget.mode === 'edit'
+    ? state.point.cards[modalTarget.ci].species[modalTarget.si] : null;
+
+  const container = document.getElementById('modalChips');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="color:var(--muted);font-size:13px;font-style:italic;">登録済みの種がありません。<br>手動入力で追加してください。</div>`;
+    return;
+  }
+  container.innerHTML = filtered.map(s =>
+    `<button class="species-chip ${s === selected ? 'selected' : ''}" onclick="selectSpecies('${s.replace(/'/g,"\\'")}')">
+      ${s}
+    </button>`
+  ).join('');
+}
+
+function selectSpecies(name) {
+  if (!modalTarget) return;
+  const { ci, si, mode } = modalTarget;
+  if (mode === 'new') {
+    state.point.cards[ci].species.push(name);
+  } else {
+    state.point.cards[ci].species[si] = name;
+  }
+  renderPoint();
+  autoSave();
+  closeModal();
+}
+
+function confirmManualInput() {
+  const val = document.getElementById('modalManualInput').value.trim();
+  if (!val) return;
+  if (!modalTarget) return;
+  const { ci, si, mode } = modalTarget;
+  if (mode === 'new') {
+    state.point.cards[ci].species.push(val);
+  } else {
+    state.point.cards[ci].species[si] = val;
+  }
+  renderPoint();
+  autoSave();
+  closeModal();
+}
+
+
+// ─── Kodrat ──────────────────────────────────────────────
+function getAllSpecies() {
+  const names = [];
+  state.mokushi.rows.forEach(r => { if(r.name.trim()) names.push(r.name.trim()); });
+  state.point.cards.forEach(card => { card.species.forEach(s => { if(s&&s.trim()) names.push(s.trim()); }); });
+  state.kodrat.cards.forEach(card => { card.rows.forEach(r => { if(r.name&&r.name.trim()) names.push(r.name.trim()); }); });
+  return [...new Set(names)];
+}
+
+function renderKodrat() {
+  const grid = document.getElementById('k-grid');
+  const allSpecies = getAllSpecies();
+
+  grid.innerHTML = state.kodrat.cards.map((card, ci) => {
+    const selectedNames = new Set(card.rows.map(r => r.name).filter(Boolean));
+
+    const chips = allSpecies.map(s => {
+      const isOn = selectedNames.has(s);
+      return `<button class="inline-chip ${isOn ? 'on' : 'off'}" onclick="toggleKodratSpecies(${ci},'${s.replace(/'/g,"\\'")}')">${s}</button>`;
+    }).join('');
+
+    const rows = card.rows.filter(r => r.name).map((r) => {
+      const realRi = card.rows.indexOf(r);
+      const covOpts = ['','＋','1','2','3','4','5'].map(o =>
+        `<option value="${o}" ${r.cov===o?'selected':''}>${o===''?'--':o}</option>`
+      ).join('');
+      return `
+        <div style="display:grid;grid-template-columns:1fr 100px 32px;gap:6px;align-items:center;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:700;color:var(--green-dark);padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.name}</span>
+          <select class="coverage-select row-input" style="font-weight:700;"
+            data-ci="${ci}" data-ri="${realRi}"
+            onchange="state.kodrat.cards[this.dataset.ci].rows[this.dataset.ri].cov=this.value; autoSave()">
+            ${covOpts}
+          </select>
+          <button onclick="removeKodratRow(${ci},${realRi})" style="background:none;border:none;color:#ccc;font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">×</button>
+        </div>`;
+    }).join('');
+
+    return `
+    <div class="kodrat-card" style="grid-column:span 2;">
+      <div class="kodrat-card-header">
+        <div class="kodrat-no">${ci+1}</div>
+        コドラート${ci+1}
+        <span style="margin-left:auto;font-size:11px;opacity:.7;">${selectedNames.size}種</span>
+      </div>
+      <div class="kodrat-body">
+        ${allSpecies.length > 0 ? `
+          <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:7px;">タップして記録</div>
+          <div class="inline-chip-list">${chips}</div>
+        ` : `<div class="point-card-empty" style="margin-bottom:8px;">目視法・ポイント法に種を登録すると選べます</div>`}
+        ${rows ? `
+          <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+            <div style="display:grid;grid-template-columns:1fr 90px 28px;gap:4px;margin-bottom:5px;padding:0 4px;">
+              <div style="font-size:10px;color:var(--muted);font-weight:700;">種名</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700;text-align:center;">被度</div>
+              <div></div>
+            </div>
+            ${rows}
+          </div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <input id="k-manual-${ci}" type="text" class="row-input" placeholder="他の種名を直接入力…" lang="ja" autocomplete="off"
+            style="flex:1;font-size:13px;padding:6px 10px;"
+            onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();addKodratManual(${ci})}">
+          <button onclick="addKodratManual(${ci})" style="background:var(--green-mid);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">追加</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleKodratSpecies(ci, name) {
+  const rows = state.kodrat.cards[ci].rows;
+  const idx = rows.findIndex(r => r.name === name);
+  if (idx >= 0) {
+    rows.splice(idx, 1);
+  } else {
+    rows.push({ name, cov: '' });
+  }
+  renderKodrat();
+  autoSave();
+}
+
+function removeKodratRow(ci, ri) {
+  state.kodrat.cards[ci].rows.splice(ri, 1);
+  renderKodrat();
+  autoSave();
+}
+
+function addKodratManual(ci) {
+  const input = document.getElementById(`k-manual-${ci}`);
+  const val = input.value.trim();
+  if (!val) return;
+  const rows = state.kodrat.cards[ci].rows;
+  if (!rows.find(r => r.name === val)) {
+    rows.push({ name: val, cov: '' });
+  }
+  renderKodrat();
+  autoSave();
+  setTimeout(() => {
+    const el = document.getElementById(`k-manual-${ci}`);
+    if (el) el.focus();
+  }, 30);
+}
+
+// ─── 種名一括編集 ────────────────────────────────────────
+function renderNamesList() {
+  const all = getAllSpecies();
+  const container = document.getElementById('names-list');
+  if (all.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:40px 16px;color:var(--muted);font-size:14px;">まだ種名が登録されていません</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="plant-table">
+      <div style="background:var(--green-dark);color:white;padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:.05em;display:grid;grid-template-columns:1fr 1fr 60px;gap:8px;">
+        <span>現在の種名</span><span>新しい種名</span><span></span>
+      </div>
+      ${all.map(name => `
+        <div style="display:grid;grid-template-columns:1fr 1fr 60px;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);align-items:center;">
+          <div style="font-size:13px;font-weight:700;color:var(--ink);">${name}</div>
+          <input type="text" class="row-input" lang="ja" autocomplete="off"
+            id="rename-${CSS.escape(name)}"
+            placeholder="${name}"
+            style="font-size:13px;padding:6px 8px;"
+            onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();applyRename('${name.replace(/'/g,"\\'")}',this.value)}">
+          <button onclick="applyRename('${name.replace(/'/g,"\\'")}',document.getElementById('rename-${CSS.escape(name)}').value)"
+            style="background:var(--green-mid);color:white;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">変更</button>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function applyRename(oldName, newName) {
+  newName = newName.trim();
+  if (!newName || newName === oldName) return;
+
+  // 目視法：同名が既にあれば古い行を削除、なければ名前を変更
+  const mRows = state.mokushi.rows;
+  const mNewIdx = mRows.findIndex(r => r.name === newName);
+  state.mokushi.rows = mRows.filter(r => {
+    if (r.name === oldName) {
+      if (mNewIdx === -1) { r.name = newName; return true; }
+      return false; // 既にnewNameがある → 削除してマージ
+    }
+    return true;
+  });
+
+  // ポイント法：重複しないよう置換
+  state.point.cards.forEach(card => {
+    const hasNew = card.species.includes(newName);
+    card.species = card.species
+      .map(s => s === oldName ? (hasNew ? null : newName) : s)
+      .filter(s => s !== null);
+  });
+
+  // コドラート法：重複しないよう置換
+  state.kodrat.cards.forEach(card => {
+    const hasNew = card.rows.some(r => r.name === newName);
+    card.rows = card.rows.filter(r => {
+      if (r.name === oldName) {
+        if (hasNew) return false; // 既にnewNameがある → 削除
+        r.name = newName;
+      }
+      return true;
+    });
+  });
+
+  autoSave();
+  renderNamesList();
+  showToast(`✅ 「${oldName}」→「${newName}」に変更しました`);
+}
+
+
+function addKodratCard() {
+  state.kodrat.cards.push({ rows: [] });
+  renderKodrat();
+}
+
+// ─── 被度変換テーブル ─────────────────────────────────────
+const COV_TO_PCT = { '＋': 1, '1': 7.5, '2': 17.5, '3': 37.5, '4': 62.5, '5': 87.5 };
+
+// ─── データ解析 ──────────────────────────────────────────
+let chartInstances = {};
+
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function renderAnalysis() {
+  const totalPoints = parseInt(document.getElementById('total-points')?.value || 25);
+  const allSpecies = getAllSpecies();
+  const tbody = document.getElementById('analysis-body');
+  if (!tbody) return;
+
+  if (allSpecies.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--muted);">データがありません</td></tr>`;
+    return;
+  }
+
+  // ── 表6 ─────────────────────────────────────────────────
+  const pointData = {};   // species → count
+  const mokushiData = {}; // species → {cov, pct}
+  const kodratData = {};  // species → avgPct
+
+  allSpecies.forEach(sp => {
+    let pc = 0;
+    state.point.cards.forEach(card => { if(card.species.includes(sp)) pc++; });
+    pointData[sp] = pc;
+
+    const mRow = state.mokushi.rows.find(r => r.name === sp);
+    mokushiData[sp] = { cov: mRow?.cov||'', pct: mRow?.cov ? (COV_TO_PCT[mRow.cov]??'-') : '-' };
+
+    const kPcts = state.kodrat.cards.map(card => {
+      const row = card.rows.find(r => r.name === sp);
+      return (row?.cov && COV_TO_PCT[row.cov] !== undefined) ? COV_TO_PCT[row.cov] : 0;
+    });
+    kodratData[sp] = kPcts.length > 0 ? Math.round(kPcts.reduce((a,b)=>a+b,0)/kPcts.length*10)/10 : '-';
+  });
+
+  tbody.innerHTML = allSpecies.map((sp, i) => {
+    const pc = pointData[sp];
+    const pointPct = totalPoints > 0 ? Math.round(pc/totalPoints*1000)/10 : '-';
+    const mc = mokushiData[sp];
+    const ka = kodratData[sp];
+    const bg = i%2===0?'white':'var(--cream)';
+    return `<tr style="background:${bg};">
+      <td style="padding:8px 10px;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;">${i+1}</td>
+      <td style="padding:8px 10px;font-weight:700;">${sp}</td>
+      <td style="padding:8px 10px;text-align:center;">${pc>0?`<span style="font-weight:700;color:var(--green-dark);">${pointPct}%</span><br><span style="font-size:10px;color:var(--muted);">(${pc}/${totalPoints})</span>`:'<span style="color:#ccc;">—</span>'}</td>
+      <td style="padding:8px 10px;text-align:center;">${mc.cov?`<span style="font-weight:700;">被度${mc.cov}</span>`:'<span style="color:#ccc;">—</span>'}</td>
+      <td style="padding:8px 10px;text-align:center;">${mc.pct!=='-'?`<span style="font-weight:700;color:var(--green-dark);">${mc.pct}%</span>`:'<span style="color:#ccc;">—</span>'}</td>
+      <td style="padding:8px 10px;text-align:center;">${ka!=='-'?`<span style="font-weight:700;color:var(--green-dark);">${ka}%</span>`:'<span style="color:#ccc;">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  // ── 表8 & 種数−面積曲線 ─────────────────────────────────
+  const AREA_PER_POINT = 0.04;
+  const t8body = document.getElementById('table8-body');
+  if (t8body) {
+    const seenSpecies = new Set();
+    const t8rows = state.point.cards.map((card, ci) => {
+      const appeared = card.species.filter(Boolean).length;
+      const newSp = card.species.filter(s => s && !seenSpecies.has(s));
+      newSp.forEach(s => seenSpecies.add(s));
+      const cumArea = Math.round((ci+1) * AREA_PER_POINT * 100) / 100;
+      const cumSp = seenSpecies.size;
+      return { appeared, newCount: newSp.length, cumArea, cumSp };
+    });
+
+    t8body.innerHTML = t8rows.map((r, i) => `
+      <tr style="background:${i%2===0?'white':'var(--cream)'};">
+        <td style="padding:8px 10px;text-align:center;font-weight:700;color:var(--muted);">${i+1}</td>
+        <td style="padding:8px 10px;text-align:center;font-weight:700;">${r.appeared}</td>
+        <td style="padding:8px 10px;text-align:center;font-weight:700;color:var(--green-mid);">${r.newCount}</td>
+        <td style="padding:8px 10px;text-align:center;">${r.cumArea}</td>
+        <td style="padding:8px 10px;text-align:center;font-weight:700;color:var(--green-dark);">${r.cumSp}</td>
+      </tr>`).join('');
+
+    // 種数−面積曲線
+    destroyChart('species-area-chart');
+    const saCtx = document.getElementById('species-area-chart')?.getContext('2d');
+    if (saCtx && t8rows.length > 0) {
+      chartInstances['species-area-chart'] = new Chart(saCtx, {
+        type: 'line',
+        data: {
+          labels: t8rows.map(r => r.cumArea.toFixed(2)),
+          datasets: [{
+            label: '累積種数',
+            data: t8rows.map(r => r.cumSp),
+            borderColor: '#2d6a2d',
+            backgroundColor: 'rgba(45,106,45,0.1)',
+            pointBackgroundColor: '#2d6a2d',
+            pointRadius: 5,
+            tension: 0.2,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { title: { display: true, text: '累積面積 (m²)', font: { weight: 'bold' } } },
+            y: { title: { display: true, text: '累積種数', font: { weight: 'bold' } }, beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+  }
+
+  // ── 散布図 共通関数 ──────────────────────────────────────
+  function calcR(pairs) {
+    if (pairs.length < 2) return null;
+    const xs = pairs.map(p=>p[0]), ys = pairs.map(p=>p[1]);
+    const mx = xs.reduce((a,b)=>a+b,0)/xs.length;
+    const my = ys.reduce((a,b)=>a+b,0)/ys.length;
+    const num = xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+    const den = Math.sqrt(xs.reduce((s,x)=>s+(x-mx)**2,0) * ys.reduce((s,y)=>s+(y-my)**2,0));
+    return den === 0 ? null : Math.round(num/den*1000)/1000;
+  }
+
+  function drawScatter(canvasId, rElemId, yLabel, pairs) {
+    destroyChart(canvasId);
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    const rEl = document.getElementById(rElemId);
+    if (!ctx) return;
+    if (pairs.length === 0) {
+      rEl && (rEl.textContent = 'データが不足しています');
+      return;
+    }
+    const max = Math.max(100, ...pairs.map(p=>Math.max(p[0],p[1])));
+    const r = calcR(pairs);
+    if (rEl) rEl.innerHTML = r !== null ? `相関係数 R = <span style="font-size:18px;">${r}</span>` : '相関係数を計算できません（データ不足）';
+
+    chartInstances[canvasId] = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: '種',
+            data: pairs.map(p=>({x:p[0],y:p[1],name:p[2]})),
+            backgroundColor: '#2d6a2d',
+            pointRadius: 6,
+          },
+          {
+            label: 'Y=X',
+            data: [{x:0,y:0},{x:max,y:max}],
+            type: 'line',
+            borderColor: '#aaa',
+            borderDash: [6,4],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            fill: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const d = ctx.raw;
+                return d.name ? `${d.name} (${d.x}, ${d.y})` : `(${d.x}, ${d.y})`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { min:0, max, title: { display:true, text:'ポイント法の被度(%)', font:{weight:'bold'} } },
+          y: { min:0, max, title: { display:true, text: yLabel, font:{weight:'bold'} } }
+        }
+      }
+    });
+  }
+
+  // 散布図① ポイント法 vs 目視法
+  const pairsM = allSpecies
+    .map(sp => {
+      const pc = pointData[sp];
+      const pp = totalPoints > 0 ? Math.round(pc/totalPoints*1000)/10 : null;
+      const mp = mokushiData[sp].pct;
+      return (pp !== null && mp !== '-') ? [pp, mp, sp] : null;
+    }).filter(Boolean);
+  drawScatter('scatter-mokushi', 'r-mokushi', '目視法の被度(%)', pairsM);
+
+  // 散布図② ポイント法 vs コドラート法
+  const pairsK = allSpecies
+    .map(sp => {
+      const pc = pointData[sp];
+      const pp = totalPoints > 0 ? Math.round(pc/totalPoints*1000)/10 : null;
+      const ka = kodratData[sp];
+      return (pp !== null && ka !== '-') ? [pp, ka, sp] : null;
+    }).filter(Boolean);
+  drawScatter('scatter-kodrat', 'r-kodrat', 'コドラート法の被度(%)', pairsK);
+}
+
+function exportAnalysis() {
+  const totalPoints = parseInt(document.getElementById('total-points')?.value || 25);
+  const allSpecies = getAllSpecies();
+  let text = `【表6. 被度の推定値の比較】\nNo\t種名\tポイント法被度(%)\t目視法被度(6段階)\t目視法被度(%)\tコドラート法平均被度(%)\n`;
+  allSpecies.forEach((sp, i) => {
+    let pointCount = 0;
+    state.point.cards.forEach(card => { if(card.species.includes(sp)) pointCount++; });
+    const pointPct = totalPoints > 0 ? Math.round(pointCount/totalPoints*1000)/10 : '-';
+    const mRow = state.mokushi.rows.find(r => r.name === sp);
+    const mokushiCov = mRow?.cov || '-';
+    const mokushiPct = mRow?.cov && COV_TO_PCT[mRow.cov] !== undefined ? COV_TO_PCT[mRow.cov] : '-';
+    const kodratPcts = [];
+    state.kodrat.cards.forEach(card => {
+      const row = card.rows.find(r => r.name === sp);
+      kodratPcts.push(row?.cov && COV_TO_PCT[row.cov] !== undefined ? COV_TO_PCT[row.cov] : 0);
+    });
+    const kodratAvg = kodratPcts.length > 0 ? Math.round(kodratPcts.reduce((a,b)=>a+b,0)/kodratPcts.length*10)/10 : '-';
+    text += `${i+1}\t${sp}\t${pointCount>0?pointPct+'%':'-'}\t${mokushiCov!=='-'?'被度'+mokushiCov:'-'}\t${mokushiPct!=='-'?mokushiPct+'%':'-'}\t${kodratAvg!=='-'?kodratAvg+'%':'-'}\n`;
+  });
+  navigator.clipboard.writeText(text).then(() => showToast('📋 解析データをコピーしました！'));
+}
+
+async function exportToExcel() {
+  // グラフが描画されているか確認
+  if (!chartInstances['species-area-chart'] && !chartInstances['scatter-mokushi'] && !chartInstances['scatter-kodrat']) {
+    showToast('⚠️ まずデータ解析タブを開いてください');
+    return;
+  }
+
+  const totalPoints = parseInt(document.getElementById('total-points')?.value || 25);
+  const allSpecies = getAllSpecies();
+  const wb = XLSX.utils.book_new();
+  const COV_PCT = { '＋': 1, '1': 7.5, '2': 17.5, '3': 37.5, '4': 62.5, '5': 87.5 };
+
+  function makeSheet(data, cols) {
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = cols;
+    return ws;
+  }
+
+  // ── グラフ画像をbase64で取得 ──────────────────────────────
+  function getChartImg(id) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return null;
+    try { return canvas.toDataURL('image/png').split(',')[1]; } catch(e) { return null; }
+  }
+
+  // ── シートにグラフ画像を貼り付け ──────────────────────────
+  function addImageToSheet(ws, imgBase64, startRow, startCol, endRow, endCol) {
+    if (!imgBase64) return;
+    if (!ws['!images']) ws['!images'] = [];
+    ws['!images'].push({
+      '!pos': { r: startRow, c: startCol, er: endRow, ec: endCol },
+      '!datatype': 'base64',
+      '!data': imgBase64,
+    });
+  }
+
+  // ── 表7 ─────────────────────────────────────────────────
+  XLSX.utils.book_append_sheet(wb, makeSheet([
+    ['被度','割合(%)','備考'],
+    ['被度＋',1,'5%以下'],['被度1',7.5,'5〜10%の平均'],['被度2',17.5,'10〜25%の平均'],
+    ['被度3',37.5,'25〜50%の平均'],['被度4',62.5,'50〜75%の平均'],['被度5',87.5,'75〜100%の平均'],
+  ], [{wch:10},{wch:10},{wch:18}]), '表7_被度変換');
+
+  // ── 表6 ─────────────────────────────────────────────────
+  const t6data = [['No','種名','ポイント法 被度(%)','目視法 被度(6段階)','目視法 被度(%)','コドラート法 平均被度(%)']];
+  allSpecies.forEach((sp,i) => {
+    let pc=0; state.point.cards.forEach(c=>{if(c.species.includes(sp))pc++;});
+    const pp = totalPoints>0 ? Math.round(pc/totalPoints*1000)/10 : '';
+    const mRow = state.mokushi.rows.find(r=>r.name===sp);
+    const mc = mRow?.cov?`被度${mRow.cov}`:'';
+    const mp = mRow?.cov?(COV_PCT[mRow.cov]??''):'';
+    const kPcts = state.kodrat.cards.map(card=>{const row=card.rows.find(r=>r.name===sp);return(row?.cov&&COV_PCT[row.cov]!==undefined)?COV_PCT[row.cov]:0;});
+    const ka = kPcts.length>0?Math.round(kPcts.reduce((a,b)=>a+b,0)/kPcts.length*10)/10:'';
+    t6data.push([i+1,sp,pc>0?pp:'',mc,mp!==''?mp:'',ka!==''?ka:'']);
+  });
+  XLSX.utils.book_append_sheet(wb, makeSheet(t6data,[{wch:5},{wch:20},{wch:16},{wch:16},{wch:14},{wch:18}]),'表6_被度比較');
+
+  // ── 表8 + 種数−面積グラフ ────────────────────────────────
+  const t8data = [['ポイントNo.','出現した種数','新たに出現した種数','累積面積(m²)','累積種数']];
+  const seen = new Set();
+  state.point.cards.forEach((card,ci)=>{
+    const appeared=card.species.filter(Boolean).length;
+    const newSp=card.species.filter(s=>s&&!seen.has(s));
+    newSp.forEach(s=>seen.add(s));
+    t8data.push([ci+1,appeared,newSp.length,Math.round((ci+1)*0.04*100)/100,seen.size]);
+  });
+  const ws8 = makeSheet(t8data,[{wch:12},{wch:14},{wch:16},{wch:14},{wch:10}]);
+  // グラフ画像を下に追加（行8以降）
+  const saImg = getChartImg('species-area-chart');
+  if (saImg) {
+    ws8['!rows'] = [];
+    addImageToSheet(ws8, saImg, 7, 0, 27, 5);
+  }
+  XLSX.utils.book_append_sheet(wb, ws8, '表8_種数面積曲線');
+
+  // ── 散布図シート ─────────────────────────────────────────
+  const scatterData1 = [['ポイント法 被度(%)','目視法 被度(%)','種名']];
+  const scatterData2 = [['ポイント法 被度(%)','コドラート法 被度(%)','種名']];
+  allSpecies.forEach(sp=>{
+    let pc=0; state.point.cards.forEach(c=>{if(c.species.includes(sp))pc++;});
+    const pp=totalPoints>0?Math.round(pc/totalPoints*1000)/10:null;
+    const mRow=state.mokushi.rows.find(r=>r.name===sp);
+    const mp=mRow?.cov?(COV_PCT[mRow.cov]??null):null;
+    const kPcts=state.kodrat.cards.map(card=>{const row=card.rows.find(r=>r.name===sp);return(row?.cov&&COV_PCT[row.cov]!==undefined)?COV_PCT[row.cov]:0;});
+    const ka=kPcts.length>0?Math.round(kPcts.reduce((a,b)=>a+b,0)/kPcts.length*10)/10:null;
+    if(pp!==null&&mp!==null) scatterData1.push([pp,mp,sp]);
+    if(pp!==null&&ka!==null) scatterData2.push([pp,ka,sp]);
+  });
+
+  const wsSc1 = makeSheet(scatterData1,[{wch:16},{wch:14},{wch:20}]);
+  const sc1Img = getChartImg('scatter-mokushi');
+  if(sc1Img) addImageToSheet(wsSc1, sc1Img, scatterData1.length+1, 0, scatterData1.length+21, 5);
+  XLSX.utils.book_append_sheet(wb, wsSc1, '散布図①_ポイントvs目視');
+
+  const wsSc2 = makeSheet(scatterData2,[{wch:16},{wch:16},{wch:20}]);
+  const sc2Img = getChartImg('scatter-kodrat');
+  if(sc2Img) addImageToSheet(wsSc2, sc2Img, scatterData2.length+1, 0, scatterData2.length+21, 5);
+  XLSX.utils.book_append_sheet(wb, wsSc2, '散布図②_ポイントvsコドラート');
+
+  // ── 目視法・ポイント法・コドラート法 ────────────────────
+  const mokData=[['No','種名','被度(6段階)','被度(%)']];
+  state.mokushi.rows.filter(r=>r.name).forEach((r,i)=>{mokData.push([i+1,r.name,r.cov?`被度${r.cov}`:'',r.cov?(COV_PCT[r.cov]??''):'']);});
+  XLSX.utils.book_append_sheet(wb,makeSheet(mokData,[{wch:5},{wch:20},{wch:14},{wch:10}]),'目視法');
+
+  const maxSp=Math.max(...state.point.cards.map(c=>c.species.length),1);
+  const pHeader=['ポイントNo.',...Array.from({length:maxSp},(_,i)=>`種名${i+1}`)];
+  const pRows=state.point.cards.map((card,ci)=>[ci+1,...card.species.filter(Boolean)]);
+  XLSX.utils.book_append_sheet(wb,makeSheet([pHeader,...pRows],[{wch:12},...Array(maxSp).fill({wch:16})]),'ポイント法');
+
+  const kData=[['コドラートNo.','種名','被度(6段階)','被度(%)']];
+  state.kodrat.cards.forEach((card,ci)=>{card.rows.filter(r=>r.name).forEach(r=>{kData.push([`コドラート${ci+1}`,r.name,r.cov?`被度${r.cov}`:'',r.cov?(COV_PCT[r.cov]??''):'']);});});
+  XLSX.utils.book_append_sheet(wb,makeSheet(kData,[{wch:14},{wch:20},{wch:14},{wch:10}]),'コドラート法');
+
+  const han = document.getElementById('m-han')?.value || '植生調査';
+  XLSX.writeFile(wb, `${han}_植生調査データ.xlsx`);
+  showToast('📥 グラフ付きExcelをダウンロードしました！');
+}
+
+function exportData(type) {
+  let text = '';
+  if (type === 'mokushi') {
+    const han = document.getElementById('m-han').value || '未記入';
+    const rec = document.getElementById('m-recorder').value || '未記入';
+    text = `【目視法】班名:${han} 記録者:${rec}\n`;
+    text += `No\t種名\t被度\n`;
+    state.mokushi.rows.forEach((r,i) => {
+      if(r.name) text += `${i+1}\t${r.name}\t${r.cov||'-'}\n`;
+    });
+  } else if (type === 'point') {
+    const han = document.getElementById('p-han').value || '未記入';
+    const rec = document.getElementById('p-recorder').value || '未記入';
+    text = `【ポイント法】班名:${han} 記録者:${rec}\n`;
+    state.point.cards.forEach((card, ci) => {
+      text += `\nポイント${ci+1}:\n`;
+      card.species.forEach((s, si) => {
+        if(s.trim()) text += `  ${si+1}. ${s}\n`;
+      });
+    });
+  } else {
+    const han = document.getElementById('k-han').value || '未記入';
+    const rec = document.getElementById('k-recorder').value || '未記入';
+    text = `【コドラート法】班名:${han} 記録者:${rec}\n`;
+    state.kodrat.cards.forEach((card, ci) => {
+      text += `\nコドラート${ci+1}:\n`;
+      card.rows.forEach(r => {
+        if(r.name) text += `  ${r.name}\t被度:${r.cov||'-'}\n`;
+      });
+    });
+  }
+  navigator.clipboard.writeText(text).then(() => showToast('📋 コピーしました！'));
+}
+
+// ─── Auto save ───────────────────────────────────────────
+function autoSave() {
+  try { localStorage.setItem('shokusei_state', JSON.stringify(state)); } catch(e) {}
+}
+
+function loadSaved() {
+  try {
+    const s = localStorage.getItem('shokusei_state');
+    if (s) {
+      const parsed = JSON.parse(s);
+      // migrate old point format {rows:[{p1,p2,p3}]} → {cards:[{species:[]}]}
+      if (parsed.point && parsed.point.rows && !parsed.point.cards) {
+        parsed.point.cards = parsed.point.rows.map(r => ({
+          species: [r.p1, r.p2, r.p3].filter(Boolean)
+        }));
+        delete parsed.point.rows;
+      }
+      state = parsed;
+    }
+  } catch(e) {}
+}
+
+// ─── Toast ───────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── Init ────────────────────────────────────────────────
+loadSaved();
+renderMokushi();
+renderPoint();
+renderKodrat();
+
+// Restore meta fields
+try {
+  const saved = JSON.parse(localStorage.getItem('shokusei_meta') || '{}');
+  if(saved.mhan) document.getElementById('m-han').value = saved.mhan;
+  if(saved.mrec) document.getElementById('m-recorder').value = saved.mrec;
+  if(saved.phan) document.getElementById('p-han').value = saved.phan;
+  if(saved.prec) document.getElementById('p-recorder').value = saved.prec;
+  if(saved.khan) document.getElementById('k-han').value = saved.khan;
+  if(saved.krec) document.getElementById('k-recorder').value = saved.krec;
+} catch(e) {}
+
+['m-han','m-recorder','p-han','p-recorder','k-han','k-recorder'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    localStorage.setItem('shokusei_meta', JSON.stringify({
+      mhan: document.getElementById('m-han').value,
+      mrec: document.getElementById('m-recorder').value,
+      phan: document.getElementById('p-han').value,
+      prec: document.getElementById('p-recorder').value,
+      khan: document.getElementById('k-han').value,
+      krec: document.getElementById('k-recorder').value,
+    }));
+  });
+});
+</script>
+</body>
+</html>
