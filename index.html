@@ -783,10 +783,60 @@ body {
     <div class="tab" onclick="switchTab('kodrat')">⬜ コドラート法</div>
     <div class="tab" onclick="switchTab('names')">✏️ 種名編集</div>
     <div class="tab" onclick="switchTab('analysis')">📊 データ解析</div>
+    <div class="tab" onclick="switchTab('feedback')">💬 フィードバック</div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ========== 部屋バー ========== -->
+<div id="room-bar" style="background:#fff;border-bottom:1.5px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap;">
+  <div id="room-status-solo" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span style="color:var(--muted);">📱 この端末だけに保存中</span>
+    <button onclick="openRoomModal()" style="padding:6px 12px;background:var(--green-mid);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🔗 共有部屋を作る/入る</button>
+  </div>
+  <div id="room-status-joined" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
+    <span style="color:var(--green-dark);font-weight:700;">🔗 共有中</span>
+    <span style="background:var(--green-pale);padding:4px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:1px;" id="room-code-label"></span>
+    <button onclick="copyRoomLink()" style="padding:5px 10px;background:#fff;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📋 リンクをコピー</button>
+    <span id="room-sync-indicator" style="color:var(--muted);font-size:12px;"></span>
+    <button onclick="leaveRoom()" style="padding:5px 10px;background:#fff;border:1.5px solid #e0b4b4;color:#c0392b;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;">退出</button>
+  </div>
+</div>
+
+<!-- ========== 部屋モーダル ========== -->
+<div class="modal-overlay" id="roomModal" onclick="if(event.target===this)closeRoomModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3>🔗 データを共有する</h3>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+        合言葉（部屋コード）を仲間に伝えると、同じ調査データを一緒に編集できます。別の端末でも同じコードを入れればデータが続きます。
+      </p>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">新しく部屋を作る</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button onclick="createRoomAuto()" style="flex:1;padding:12px;background:var(--green-mid);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">🎲 自動でコード生成</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <input type="text" id="room-create-input" placeholder="自分で合言葉を決める" autocomplete="off"
+          style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;box-sizing:border-box;">
+        <button onclick="createRoomCustom()" style="padding:12px 16px;background:var(--green-dark);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">作成</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;border-top:1px solid var(--border);padding-top:16px;">既存の部屋に入る</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="room-join-input" placeholder="合言葉を入力" autocomplete="off"
+          style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;box-sizing:border-box;">
+        <button onclick="joinRoom()" style="padding:12px 16px;background:var(--green-dark);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">入る</button>
+      </div>
+      <div id="room-modal-status" style="font-size:13px;font-weight:700;margin-top:14px;min-height:18px;text-align:center;"></div>
+    </div>
+    <button class="modal-close" onclick="closeRoomModal()">閉じる</button>
+  </div>
+</div>
 
 <!-- ========== 目視法 ========== -->
 <div class="page active" id="page-mokushi">
@@ -1055,6 +1105,31 @@ body {
   <div id="r-kodrat" style="text-align:center;font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:24px;"></div>
 </div>
 
+<!-- ========== フィードバック ========== -->
+<div class="page" id="page-feedback">
+  <div class="method-desc">
+    <div class="method-desc-icon">💬</div>
+    このアプリの使い心地はいかがですか？評価とご意見を管理人に送れます。いただいた声をもとに改善していきます。
+  </div>
+
+  <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:8px;">満足度</div>
+    <div id="star-rating" style="font-size:36px;letter-spacing:6px;cursor:pointer;user-select:none;margin-bottom:20px;">
+      <span data-star="1">☆</span><span data-star="2">☆</span><span data-star="3">☆</span><span data-star="4">☆</span><span data-star="5">☆</span>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:8px;">ご意見・ご要望（自由記入）</div>
+    <textarea id="feedback-comment" placeholder="使いやすかった点、改善してほしい点、不具合など何でもどうぞ" lang="ja"
+      style="width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+
+    <button onclick="submitFeedback()" id="feedback-submit-btn"
+      style="margin-top:16px;width:100%;padding:14px;background:var(--green-mid);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">
+      送信する
+    </button>
+    <div id="feedback-status" style="text-align:center;font-size:13px;font-weight:700;margin-top:12px;min-height:18px;"></div>
+  </div>
+</div>
+
 <!-- ========== Species Picker Modal ========== -->
 <div class="modal-overlay" id="speciesModal" onclick="handleModalOverlayClick(event)">
   <div class="modal-sheet">
@@ -1091,7 +1166,7 @@ const COV_CLASS   = {'＋':'cov-plus','1':'cov-1','2':'cov-2','3':'cov-3','4':'c
 // ─── Tab switch ──────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['mokushi','point','kodrat','names','analysis'];
+    const names = ['mokushi','point','kodrat','names','analysis','feedback'];
     t.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1891,8 +1966,52 @@ function exportData(type) {
 }
 
 // ─── Auto save ───────────────────────────────────────────
+function gatherMeta() {
+  return {
+    mhan: document.getElementById('m-han')?.value || '',
+    mrec: document.getElementById('m-recorder')?.value || '',
+    phan: document.getElementById('p-han')?.value || '',
+    prec: document.getElementById('p-recorder')?.value || '',
+    khan: document.getElementById('k-han')?.value || '',
+    krec: document.getElementById('k-recorder')?.value || '',
+  };
+}
+
+function applyMeta(m) {
+  if (!m) return;
+  if (document.getElementById('m-han')) document.getElementById('m-han').value = m.mhan || '';
+  if (document.getElementById('m-recorder')) document.getElementById('m-recorder').value = m.mrec || '';
+  if (document.getElementById('p-han')) document.getElementById('p-han').value = m.phan || '';
+  if (document.getElementById('p-recorder')) document.getElementById('p-recorder').value = m.prec || '';
+  if (document.getElementById('k-han')) document.getElementById('k-han').value = m.khan || '';
+  if (document.getElementById('k-recorder')) document.getElementById('k-recorder').value = m.krec || '';
+}
+
+// 全データ（調査内容＋班名など）を1つにまとめる
+function gatherFullData() {
+  return { state: state, meta: gatherMeta() };
+}
+
+function applyFullData(full) {
+  if (!full) return;
+  if (full.state) {
+    const parsed = full.state;
+    if (parsed.point && parsed.point.rows && !parsed.point.cards) {
+      parsed.point.cards = parsed.point.rows.map(r => ({ species: [r.p1, r.p2, r.p3].filter(Boolean) }));
+      delete parsed.point.rows;
+    }
+    state = parsed;
+  }
+  applyMeta(full.meta);
+  renderMokushi();
+  renderPoint();
+  renderKodrat();
+}
+
 function autoSave() {
   try { localStorage.setItem('shokusei_state', JSON.stringify(state)); } catch(e) {}
+  try { localStorage.setItem('shokusei_meta', JSON.stringify(gatherMeta())); } catch(e) {}
+  if (currentRoom && !isApplyingRemote) scheduleRoomPush();
 }
 
 function loadSaved() {
@@ -1939,16 +2058,310 @@ try {
 
 ['m-han','m-recorder','p-han','p-recorder','k-han','k-recorder'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => {
-    localStorage.setItem('shokusei_meta', JSON.stringify({
-      mhan: document.getElementById('m-han').value,
-      mrec: document.getElementById('m-recorder').value,
-      phan: document.getElementById('p-han').value,
-      prec: document.getElementById('p-recorder').value,
-      khan: document.getElementById('k-han').value,
-      krec: document.getElementById('k-recorder').value,
-    }));
+    autoSave();
   });
 });
+
+// ─── 部屋（共有）機能 ──────────────────────────────────────
+let currentRoom = null;
+let isApplyingRemote = false;
+let pushTimer = null;
+let pollTimer = null;
+let lastRemoteStamp = null;
+
+function genRoomCode() {
+  const a = ['MORI','HARU','NATSU','AKI','FUYU','SORA','UMI','HANA','TORI','YAMA'];
+  const w = a[Math.floor(Math.random()*a.length)];
+  const n = Math.floor(1000 + Math.random()*9000);
+  return w + '-' + n;
+}
+
+function normalizeCode(c) {
+  return (c || '').trim().toUpperCase().replace(/\s+/g,'');
+}
+
+function openRoomModal() {
+  document.getElementById('roomModal').classList.add('open');
+  document.getElementById('room-modal-status').textContent = '';
+}
+function closeRoomModal() {
+  document.getElementById('roomModal').classList.remove('open');
+}
+
+function roomHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+  };
+}
+
+async function createRoomAuto() {
+  await doCreateRoom(genRoomCode());
+}
+async function createRoomCustom() {
+  const code = normalizeCode(document.getElementById('room-create-input').value);
+  if (code.length < 3) { setRoomModalStatus('合言葉は3文字以上にしてください', true); return; }
+  await doCreateRoom(code);
+}
+
+async function doCreateRoom(code) {
+  setRoomModalStatus('作成中...', false);
+  try {
+    // 既に存在するか確認
+    const check = await fetch(SUPABASE_URL + '/rest/v1/rooms?code=eq.' + encodeURIComponent(code) + '&select=code', { headers: roomHeaders() });
+    const existing = await check.json();
+    if (existing.length > 0) {
+      setRoomModalStatus('そのコードは既に使われています。入る場合は下の欄から。', true);
+      return;
+    }
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rooms', {
+      method: 'POST',
+      headers: { ...roomHeaders(), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ code: code, data: gatherFullData(), updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) { setRoomModalStatus('作成に失敗しました（' + res.status + '）', true); return; }
+    enterRoom(code);
+    closeRoomModal();
+    showToast('🔗 部屋「' + code + '」を作成しました');
+  } catch(e) {
+    setRoomModalStatus('通信エラーが発生しました', true);
+    console.error(e);
+  }
+}
+
+async function joinRoom() {
+  const code = normalizeCode(document.getElementById('room-join-input').value);
+  if (!code) { setRoomModalStatus('合言葉を入力してください', true); return; }
+  setRoomModalStatus('接続中...', false);
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rooms?code=eq.' + encodeURIComponent(code) + '&select=*', { headers: roomHeaders() });
+    const rows = await res.json();
+    if (!rows || rows.length === 0) {
+      setRoomModalStatus('その合言葉の部屋が見つかりません', true);
+      return;
+    }
+    // リモートデータを取り込む
+    isApplyingRemote = true;
+    applyFullData(rows[0].data);
+    isApplyingRemote = false;
+    lastRemoteStamp = rows[0].updated_at;
+    enterRoom(code);
+    closeRoomModal();
+    showToast('🔗 部屋「' + code + '」に入りました');
+  } catch(e) {
+    setRoomModalStatus('通信エラーが発生しました', true);
+    console.error(e);
+  }
+}
+
+function enterRoom(code) {
+  currentRoom = code;
+  try { localStorage.setItem('shokusei_room', code); } catch(e) {}
+  document.getElementById('room-status-solo').style.display = 'none';
+  document.getElementById('room-status-joined').style.display = 'flex';
+  document.getElementById('room-code-label').textContent = code;
+  // URLにも反映（リンク共有用）
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('room', code);
+    window.history.replaceState({}, '', url);
+  } catch(e) {}
+  startPolling();
+}
+
+function leaveRoom() {
+  if (!confirm('共有を解除しますか？\n（このデータはこの端末に残ります）')) return;
+  currentRoom = null;
+  try { localStorage.removeItem('shokusei_room'); } catch(e) {}
+  if (pollTimer) clearInterval(pollTimer);
+  document.getElementById('room-status-solo').style.display = 'flex';
+  document.getElementById('room-status-joined').style.display = 'none';
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('room');
+    window.history.replaceState({}, '', url);
+  } catch(e) {}
+  showToast('共有を解除しました');
+}
+
+function setRoomModalStatus(msg, isError) {
+  const el = document.getElementById('room-modal-status');
+  el.textContent = msg;
+  el.style.color = isError ? '#c0392b' : 'var(--green-mid)';
+}
+
+function copyRoomLink() {
+  const url = new URL(window.location.href);
+  url.searchParams.set('room', currentRoom);
+  navigator.clipboard.writeText(url.toString())
+    .then(() => showToast('📋 リンクをコピーしました'))
+    .catch(() => showToast('コピーできませんでした: ' + url.toString()));
+}
+
+// ─── 同期：送信（デバウンス） ───────────────────────────────
+function scheduleRoomPush() {
+  if (pushTimer) clearTimeout(pushTimer);
+  setSyncIndicator('保存中...');
+  pushTimer = setTimeout(pushRoom, 1200);
+}
+
+async function pushRoom() {
+  if (!currentRoom) return;
+  try {
+    const stamp = new Date().toISOString();
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rooms?code=eq.' + encodeURIComponent(currentRoom), {
+      method: 'PATCH',
+      headers: { ...roomHeaders(), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ data: gatherFullData(), updated_at: stamp })
+    });
+    if (res.ok) {
+      lastRemoteStamp = stamp;
+      setSyncIndicator('✓ 同期済み');
+    } else {
+      setSyncIndicator('⚠ 保存失敗');
+    }
+  } catch(e) {
+    setSyncIndicator('⚠ 通信エラー');
+    console.error(e);
+  }
+}
+
+// ─── 同期：受信（ポーリング） ───────────────────────────────
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollRoom, 4000);
+}
+
+async function pollRoom() {
+  if (!currentRoom || isApplyingRemote) return;
+  // 自分が入力中（送信待ち）のときは取り込まない
+  if (pushTimer) return;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rooms?code=eq.' + encodeURIComponent(currentRoom) + '&select=data,updated_at', { headers: roomHeaders() });
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return;
+    const remoteStamp = rows[0].updated_at;
+    if (remoteStamp && remoteStamp !== lastRemoteStamp) {
+      lastRemoteStamp = remoteStamp;
+      isApplyingRemote = true;
+      applyFullData(rows[0].data);
+      isApplyingRemote = false;
+      setSyncIndicator('🔄 更新を受信');
+      showToast('🔄 仲間の変更を反映しました');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function setSyncIndicator(msg) {
+  const el = document.getElementById('room-sync-indicator');
+  if (el) el.textContent = msg;
+}
+
+// ─── 起動時：URLパラメータ or 保存済み部屋を復元 ──────────────
+(async function restoreRoom() {
+  let code = null;
+  try {
+    const url = new URL(window.location.href);
+    code = url.searchParams.get('room');
+  } catch(e) {}
+  if (!code) {
+    try { code = localStorage.getItem('shokusei_room'); } catch(e) {}
+  }
+  if (code) {
+    code = normalizeCode(code);
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rooms?code=eq.' + encodeURIComponent(code) + '&select=*', { headers: roomHeaders() });
+      const rows = await res.json();
+      if (rows && rows.length > 0) {
+        isApplyingRemote = true;
+        applyFullData(rows[0].data);
+        isApplyingRemote = false;
+        lastRemoteStamp = rows[0].updated_at;
+        enterRoom(code);
+        showToast('🔗 共有部屋「' + code + '」に接続しました');
+      }
+    } catch(e) { console.error(e); }
+  }
+})();
+
+// ─── Feedback ────────────────────────────────────────────
+const SUPABASE_URL = 'https://trlgjiskqquaiokaadlq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_7EaqXuXaVT1ALrBoH8fzGw_d07yQNXu';
+let selectedRating = 0;
+
+document.querySelectorAll('#star-rating span').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.getAttribute('data-star'));
+    paintStars(selectedRating);
+  });
+  star.addEventListener('mouseenter', () => paintStars(parseInt(star.getAttribute('data-star'))));
+});
+document.getElementById('star-rating').addEventListener('mouseleave', () => paintStars(selectedRating));
+
+function paintStars(n) {
+  document.querySelectorAll('#star-rating span').forEach(s => {
+    const v = parseInt(s.getAttribute('data-star'));
+    s.textContent = v <= n ? '★' : '☆';
+    s.style.color = v <= n ? '#f5b400' : 'var(--muted)';
+  });
+}
+
+async function submitFeedback() {
+  const comment = document.getElementById('feedback-comment').value.trim();
+  const status = document.getElementById('feedback-status');
+  const btn = document.getElementById('feedback-submit-btn');
+
+  if (selectedRating === 0 && !comment) {
+    status.style.color = '#c0392b';
+    status.textContent = '評価かご意見を入力してください';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  status.style.color = 'var(--muted)';
+  status.textContent = '送信中...';
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        rating: selectedRating || null,
+        comment: comment || null,
+        page: 'app'
+      })
+    });
+
+    if (res.ok) {
+      status.style.color = 'var(--green-mid)';
+      status.textContent = '✅ 送信しました。ありがとうございます！';
+      document.getElementById('feedback-comment').value = '';
+      selectedRating = 0;
+      paintStars(0);
+    } else {
+      const txt = await res.text();
+      status.style.color = '#c0392b';
+      status.textContent = '送信に失敗しました（' + res.status + '）';
+      console.error('Feedback error:', txt);
+    }
+  } catch (e) {
+    status.style.color = '#c0392b';
+    status.textContent = '通信エラーが発生しました';
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
 </script>
 </body>
 </html>
