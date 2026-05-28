@@ -775,7 +775,10 @@ body {
       <div class="header-icon">🌿</div>
       <h1>植生調査 フィールドノート</h1>
     </div>
-    <div class="header-meta">v1.0</div>
+    <div class="header-meta" style="display:flex;align-items:center;gap:10px;">
+      <button onclick="openGuide()" title="使い方ガイド" style="background:rgba(255,255,255,0.18);color:#fff;border:1.5px solid rgba(255,255,255,0.5);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">📖 使い方</button>
+      <span>v1.1</span>
+    </div>
   </div>
   <div class="tabs">
     <div class="tab active" onclick="switchTab('mokushi')">👁 目視法</div>
@@ -792,7 +795,7 @@ body {
 <!-- ========== 部屋バー ========== -->
 <div id="room-bar" style="background:#fff;border-bottom:1.5px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap;">
   <div id="room-status-solo" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-    <span style="color:var(--muted);">📱 この端末だけに保存中</span>
+    <span style="color:var(--muted);">📱 まだ共有していません（この端末だけに保存中）</span>
     <button onclick="openRoomModal()" style="padding:6px 12px;background:var(--green-mid);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🔗 共有部屋を作る/入る</button>
   </div>
   <div id="room-status-joined" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
@@ -835,6 +838,66 @@ body {
       <div id="room-modal-status" style="font-size:13px;font-weight:700;margin-top:14px;min-height:18px;text-align:center;"></div>
     </div>
     <button class="modal-close" onclick="closeRoomModal()">閉じる</button>
+  </div>
+</div>
+
+<!-- ========== 使い方ガイド（オンボーディング） ========== -->
+<div id="guide-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(20,40,20,0.55);backdrop-filter:blur(2px);overflow-y:auto;padding:20px 14px;">
+  <div style="max-width:520px;margin:0 auto;background:var(--cream);border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,0.3);overflow:hidden;">
+    <!-- ヘッダー -->
+    <div style="background:var(--green-dark);color:#fff;padding:22px 22px 18px;">
+      <div style="font-size:30px;margin-bottom:6px;">🌿</div>
+      <div style="font-size:20px;font-weight:900;">ようこそ！植生調査ノートへ</div>
+      <div style="font-size:13px;opacity:.85;margin-top:4px;">はじめての方へ。このアプリの使い方をかんたんに説明します。</div>
+    </div>
+
+    <div style="padding:18px 20px 8px;">
+      <!-- 1. できること -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:800;color:var(--green-dark);font-size:15px;margin-bottom:10px;">① 3つの調査法を記録できます</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--ink);">
+          上のタブで切り替えます。<br>
+          <strong>👁 目視法</strong>：歩きながら見つけた植物と被度を記録<br>
+          <strong>📍 ポイント法</strong>：各ポイントの植物をタップで記録<br>
+          <strong>⬜ コドラート法</strong>：区画ごとに植物と被度を記録<br>
+          <strong>📊 データ解析</strong>：入力内容から表やグラフを自動作成
+        </div>
+      </div>
+
+      <!-- 2. 自動保存 -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:800;color:var(--green-dark);font-size:15px;margin-bottom:10px;">② 入力は自動で保存されます</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--ink);">
+          ボタンを押さなくても、入力したそばから自動で保存されます。ページを閉じても、<strong>同じ端末・同じブラウザ</strong>で開けばデータはそのまま残っています。安心して入力してください。
+        </div>
+      </div>
+
+      <!-- 3. 共有部屋 -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:800;color:var(--green-dark);font-size:15px;margin-bottom:10px;">③ 仲間とデータを共有できます（任意）</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--ink);">
+          画面上部の <strong>「🔗 共有部屋を作る/入る」</strong> から、合言葉（部屋コード）を作れます。<br><br>
+          ・仲間に合言葉を伝えると、<strong>同じデータを一緒に編集</strong>できます<br>
+          ・<strong>別の端末</strong>でも同じ合言葉を入れればデータが続きます<br>
+          ・「リンクをコピー」で送れば、相手はリンクを開くだけで参加できます<br><br>
+          <span style="color:var(--muted);font-size:12px;">※1人で使う場合は、共有しなくてもそのまま使えます。</span>
+        </div>
+      </div>
+
+      <!-- 4. フィードバック -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:8px;">
+        <div style="font-weight:800;color:var(--green-dark);font-size:15px;margin-bottom:10px;">④ 感想・要望を送れます</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--ink);">
+          <strong>💬 フィードバック</strong> タブから、星評価とコメントを管理人に送れます。使ってみて気づいたことがあれば、ぜひ送ってください。
+        </div>
+      </div>
+    </div>
+
+    <!-- フッター -->
+    <div style="padding:8px 20px 22px;">
+      <button onclick="closeGuide()" style="width:100%;padding:14px;background:var(--green-mid);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;">使ってみる</button>
+      <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px;">この説明は、上の「📖 使い方」からいつでも見られます</div>
+    </div>
   </div>
 </div>
 
@@ -2259,6 +2322,24 @@ function setSyncIndicator(msg) {
   const el = document.getElementById('room-sync-indicator');
   if (el) el.textContent = msg;
 }
+
+// ─── 使い方ガイド ──────────────────────────────────────────
+function openGuide() {
+  document.getElementById('guide-overlay').style.display = 'block';
+}
+function closeGuide() {
+  try { localStorage.setItem('shokusei_guide_seen', '1'); } catch(e) {}
+  document.getElementById('guide-overlay').style.display = 'none';
+}
+
+// 初回は必ず表示。2回目以降は「📖 使い方」ボタンからのみ。
+(function maybeShowGuide() {
+  let seen = false;
+  try { seen = localStorage.getItem('shokusei_guide_seen') === '1'; } catch(e) {}
+  if (!seen) {
+    setTimeout(() => { document.getElementById('guide-overlay').style.display = 'block'; }, 400);
+  }
+})();
 
 // ─── 起動時：URLパラメータ or 保存済み部屋を復元 ──────────────
 (async function restoreRoom() {
